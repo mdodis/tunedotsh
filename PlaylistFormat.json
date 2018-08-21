@@ -1,0 +1,11 @@
+{
+	"version": "0.1.0",
+	"dirs":[
+		"~/Music",
+		"path2"
+	],
+	"queue": [
+		"music1.mp3",
+		"music2.mp3"
+	]
+}
