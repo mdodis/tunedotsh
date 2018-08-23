@@ -78,6 +78,7 @@ namespace mk{
                 std::cerr << "Error on playing Stream!\n" << e.what() << std::endl;
                 return false;
             }
+            isPlaying = true;
             return true;
         }
         inline void TrackPlay() {

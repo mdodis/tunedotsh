@@ -42,6 +42,90 @@ namespace mk
         size_t startOffset = 0;
     };
 
+    class UIGenericList
+    {
+    public:
+
+        UIGenericList(uint x, uint y, uint w, uint h)
+            :x(x), y(y), w(w), h(h) {}
+        /*
+         *  List Methods
+         */
+        virtual void        AddItem     (std::string element);
+        virtual void        RemoveItem  (std::string element);
+        virtual void        RemoveItem  (uint index);
+        inline virtual void Clear       () {elements.clear();}
+        inline size_t       GetSize     () const {return elements.size();}
+
+
+        virtual void Print(uint row, uint col);
+        virtual bool Update(int ch);
+
+        inline unsigned long      GetSelectedItemIndex    () const {return selectedItem;}
+        inline const StyledLine*  GetItem                 (unsigned long index)
+            {return elements[index];}
+        inline const StyledLine* GetSelectedItem          () const 
+            {return elements[selectedItem];}
+
+        inline void SetH(int nh) {h = nh;}
+        inline void SetW(unsigned long nw)
+        {
+            w = nw;
+            for(auto* s : elements)
+            {
+                s->w = nw;
+            }
+        }
+        inline void SetX(int nx) {x = nx;}
+        inline void SetY(int ny) {y = ny;}
+
+        inline unsigned long GetX () const {return x;}
+        inline unsigned long GetY () const {return y;}
+        inline unsigned long GetW () const {return w;}
+        inline unsigned long GetH () const {return h;}
+
+        inline bool GetFocus() const { return isFocus;}
+        inline void SetFocus(bool value) {isFocus = value;}
+    protected:
+        uint x, y, w, h;
+        size_t displayStart = 0;
+        std::vector<StyledLine*> elements;
+        // bool isActive = true;
+        unsigned long selectedItem = 0;
+        virtual void ChangeSelection(int value);
+
+    private:
+        bool isFocus = false;
+    };
+
+    class UIPlaylist : public UIGenericList
+    {
+    public:
+        UIPlaylist(uint x, uint y, uint w, uint h) : UIGenericList(x,y,w,h)
+        {}
+
+        inline ulong            GetCurrentItemIndex     () const {return currentItem;}
+        const StyledLine* const GetCurrentItem          () const {return elements[currentItem];}
+
+        inline void             SetCurrentItemIndex     (ulong value) {currentItem = value; }
+        inline void             SetCurrentToSelected    () {currentItem = selectedItem;}
+        void                    SetCurrentItem          (std::string name);
+
+        //  Adds val to current, returns false if it exceeds the bounds of the elements list
+        inline bool             ChangeCurrent           (long val)
+        {
+            long change = (long)currentItem + val;
+            if (change > elements.size() || change < 0)
+                return false;
+            currentItem = change;
+            return true;
+        }
+
+    private:
+        unsigned long currentItem = 0;
+
+    };
+
     class StyledList
     {
     public:
@@ -86,6 +170,13 @@ namespace mk
                 s->w = nw;
             }
         }
+
+        inline void SetX(int nx) {x = nx;}
+        inline void SetY(int ny) {y = ny;}
+
+        inline int GetX () const {return x;}
+        inline int GetY () const {return y;}
+
     private:
         int x, y, w, h;
         size_t displayStart = 0;
@@ -96,6 +187,7 @@ namespace mk
         void ChangeSelection(int value);
 
     };
+
 
     class UISoundPopup{
         static float            currentVolume;

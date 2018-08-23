@@ -1,13 +1,10 @@
 /*
- *  TODO: PlaylistManager
- *  TODO: Play Single from first arg
  */
 // #define PLAYLIST_TEST
-// #define GUI_TEST
+#define GUI_TEST
 // #define FMOD_TEST
 
 #define MS_TO_MIN 1.6667E-5
-
 
 #include <iostream>
 #include <fstream>
@@ -22,23 +19,34 @@
 #ifdef WIN32
 
 #include <windows.h>
+/*
+ * Windows does not provide usleep, solution is
+ * to define it here
+ */
 
-void usleep(__int64 usec) 
-{ 
-    HANDLE timer; 
-    LARGE_INTEGER ft; 
+#include <chrono>
+#include <thread>
 
-    ft.QuadPart = -(10*usec); // Convert to 100 nanosecond interval, negative value indicates relative time
-
-    timer = CreateWaitableTimer(NULL, TRUE, NULL); 
-    SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0); 
-    WaitForSingleObject(timer, INFINITE); 
-    CloseHandle(timer); 
+void usleep(__int64 usec)
+{
+    std::this_thread::sleep_for(std::chrono::seconds(usec));
 }
+
+// void usleep(__int64 usec) 
+// { 
+//     HANDLE timer; 
+//     LARGE_INTEGER ft; 
+
+//     ft.QuadPart = -(10*usec); // Convert to 100 nanosecond interval, negative value indicates relative time
+
+//     timer = CreateWaitableTimer(NULL, TRUE, NULL); 
+//     SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0); 
+//     WaitForSingleObject(timer, INFINITE); 
+//     CloseHandle(timer); 
+// }
 
 #else
 #include <unistd.h>
-
 #endif
 
 using namespace mk;
@@ -69,7 +77,6 @@ void InitUI()
 
 struct MKArgs{
     std::string     path;
-    bool            isDirMode;
     MKOption        option;
 };
 
@@ -164,8 +171,6 @@ int main(int argc, char const *argv[])
     SoundSystem s;
     Playlist p;
 
-    std::cout << (a.option != MKOption::Unspecified) << '\n';
-    std::cout << a.path << '\n';
 
     if(a.option == MKOption::Directory)
     {
@@ -184,9 +189,12 @@ int main(int argc, char const *argv[])
         }
     }
 
+    if (p.songs.size() == 0)
+        return -1;
     for(auto& it : p.songs)
     {
         std::cout << it->fileName << '\n';
+        std::cout << it->filePath << '\n';
     }
 
 
@@ -204,11 +212,16 @@ int main(int argc, char const *argv[])
     InitUI();
 
     // SelectableList list;
-    StyledList list(0,0,30,10);
-    list.Add("A Kul Song 1");
-    list.Add("Despacito 3");
-    list.Add("Hello Kitty OST");
-    list.Add("Furrytale - Alexander Rybak");
+    UIGenericList tracklist(0,0,30,10);
+    tracklist.AddItem("A Kul Song 1");
+    tracklist.AddItem("Despacito 3");
+    tracklist.AddItem("Hello Kitty OST");
+    tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
+    tracklist.SetFocus(true);
+
+    StyledList playlist(0, 0, 30, 10);
+    // playlist.Add("YOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYO");
+    playlist.Add("YOYOYOYO");
 
     StyledLine s(std::string("A Kul Song 1"), 0,0);
     refresh();
@@ -221,13 +234,17 @@ int main(int argc, char const *argv[])
         int row, col;
         getmaxyx(stdscr, row, col);
         unsigned int w = col / 2 - 1;
-        list.SetW(w);
+        tracklist.SetW(w + 1);
+        playlist.SetW(w);
+
+        playlist.SetX(w + 2);
 
         s.y = row-2;
         s.w = col;
         s.Print(row, col);
         ProgressBar(length, now, row, col, row - 1);
-        list.Print(row, col);
+        tracklist.Print(row, col);
+        playlist.Print(row, col);
         // Separator
         PrintVertSeparator(row, col, 0, row - 4, w + 1, '|');
 
@@ -238,17 +255,23 @@ int main(int argc, char const *argv[])
         refresh();
 
         usleep(3000);
-        // sleep(1);
 
+        // Update
         int c = getch();
         if(c == 'q')
             break;
-        bool b = list.Update(c);
+        else if(c == '\t')
+        {
+            // Switch Focus
+
+        }
+        bool b = tracklist.Update(c);
+        bool d = playlist.Update(0);
         if(b)
         {
-            StyledLine* line = list.GetSelectedItem();
+            const StyledLine* line = tracklist.GetSelectedItem();
             s.data = line->data;
-            list.ApplySelectedToCurrent();
+            // tracklist.ApplySelectedToCurrent();
         }
         UISoundPopup::Update(c, 3000u);
     }
@@ -267,6 +290,7 @@ using namespace mk;
 int main(int argc, char const *argv[])
 {
     SoundSystem system;
+    StyledList tracklist(0,0,100,50);
     StyledList playlist(0,0,100,50);
 
     MKArgs a = ParseArgs(argc, argv);
@@ -288,6 +312,11 @@ int main(int argc, char const *argv[])
                 return -1;
             }
             PopulateList(p, &playlist);
+        } break;
+
+        case MKOption::SinglePlay:
+        {
+            
         } break;
 
         default:
@@ -321,13 +350,13 @@ int main(int argc, char const *argv[])
         playlist.SetH(row - 3);
 
         // Draws Progress bar
-        float length = 0.0f;
+        float length;
         unsigned int len;
         float now = 0.0f;
         FMOD::Sound* sound = system.GetSound();
         sound->getLength(&len,FMOD_TIMEUNIT_MS );
         length = (double)len * MS_TO_MIN;
-        FMOD::Channel* channel = nullptr;
+        FMOD::Channel* channel;
         channel = system.GetChannel();
         len = 0u;
         if(channel)

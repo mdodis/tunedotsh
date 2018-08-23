@@ -9,11 +9,52 @@ namespace mk{
         std::string outputData = data;
         if(data.length() > (unsigned long)w)
         {
+            std::string tmp;
+            // outputData = outputData.substr(startOffset, w);
+            if (startOffset + w> data.length())
+                tmp = outputData.substr(startOffset);
+            else
+            {
+                tmp = outputData.substr(startOffset, w);
+            }
 
-            outputData = outputData.substr(startOffset, w);
+            if (startOffset + w == data.length() + 1)
+            {
+                tmp += " ";
+            }
+            else if (startOffset + w > data.length() + 1)
+            {
+                tmp += " ";
+                std::string sub;
+                
+                try
+                {
+                    /* code */
+
+                    unsigned long sw = data.length() - 1 - startOffset;
+
+                    size_t t;
+                    if ( (long)startOffset - (long)data.length() - 1  < 0)
+                        t = 0;
+                    else
+                        t = startOffset + w - data.length() - 1;
+
+                    sub = data.substr(t,
+                            w - sw - 1);
+                }
+                catch(const std::out_of_range& e)
+                {
+                    std::cerr << e.what() << '\n';
+                    sub = std::to_string( startOffset +w - data.length() - 1);
+                    sub += ":";
+                    sub += std::to_string(data.length());
+                }
+                tmp += sub;
+                tmp.pop_back();
+            }
+
+            outputData = tmp;
         }
-        else
-            outputData = data;
         mvprintw(y, x, outputData.c_str());
     }
 
@@ -28,7 +69,7 @@ namespace mk{
             }
             if(isAnimated)
                 startOffset++;
-            if(startOffset + w > data.length())
+            if(startOffset >= data.length() + 1)
             {
                 isAnimated = false;
                 startOffset = 0;
@@ -41,6 +82,105 @@ namespace mk{
             }
         }
     }
+
+/*
+ *  UIGenericList
+ *  =============
+ */
+
+    void UIGenericList::AddItem(std::string element)
+    {
+        StyledLine* l = new StyledLine(element, x,y + elements.size(),w);
+        elements.push_back(l);
+    }
+
+    void UIGenericList::RemoveItem(std::string element)
+    {
+        std::vector<StyledLine*>::iterator i;
+        
+        for( i = elements.begin(); i != elements.end(); i++)
+        {
+            if((**i).data == element)
+            {
+                delete *i;
+                elements.erase(i);
+            }
+        }
+        
+    }
+
+    void UIGenericList::RemoveItem(uint index)
+    {
+        std::vector<StyledLine*>::iterator i;
+        elements.erase(elements.begin() + index);
+    }
+
+    void UIGenericList::Print(uint row, uint col)
+    {
+        unsigned int count = 0;
+        size_t tmp = elements.size() > (size_t)h ? h : elements.size();
+        if(displayStart + h > elements.size())
+        {
+            tmp = elements.size();
+        }
+        else {tmp = displayStart + h;}
+        for(unsigned long i = displayStart; i < tmp; ++i)
+        {
+            elements[i]->x = x ;
+            elements[i]->y = y + count;
+            if(i == selectedItem)
+                attron(A_STANDOUT);
+            elements[i]->Print(row, col);
+            attroff(A_STANDOUT);
+            count++;
+        }  
+    }
+
+    bool UIGenericList::Update(int ch)
+    {
+        bool ret = false;
+        if (isFocus)
+        {
+            switch(ch)
+            {
+                case KEY_UP:
+                    ChangeSelection(-1);
+                    break;
+                case KEY_DOWN:
+                    ChangeSelection(1);
+                    break;
+                case '\n':
+                    ret = true;
+                    break;
+                default:
+                    break;
+            }
+        }
+        // lines[selectedItem]->Update();
+        
+        for(size_t i = 0; i < elements.size(); i++)
+        {
+            if(i == selectedItem)
+                elements[i]->Update(true);
+            else
+                elements[i]->Update(false);
+        }
+        
+        return ret;
+    }
+
+    void UIGenericList::ChangeSelection(int value)
+    {
+        if((int)selectedItem + value >= 0 && (int)(selectedItem + value) < (int)elements.size())
+        {
+            selectedItem += value;
+        }
+        if(selectedItem >= displayStart + h || selectedItem < displayStart)
+        {
+            displayStart += value;
+        }
+    }
+
 
     void StyledList::ChangeSelection(int value)
     {
