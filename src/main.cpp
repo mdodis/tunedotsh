@@ -63,6 +63,7 @@ enum class MKOption{
 
 void InitUI()
 {
+    setlocale(LC_ALL, "");
     initscr();
     noecho();
     curs_set(0);
@@ -71,7 +72,6 @@ void InitUI()
     keypad(stdscr, true);
     refresh();
 
-    setlocale(LC_ALL, "");
 }
 
 
@@ -107,22 +107,22 @@ MKArgs ParseArgs(int argc, char const * argv[])
 }
 
 
-void PopulateList(json* queue, StyledList* list)
+void PopulateList(json* queue, UIGenericList* list)
 {
     for(auto it = queue->begin(); it != queue->end(); it++)
     {
         std::string s = *it;
-        list->Add(s);
+        list->AddItem(s);
     }
 }
 
-void PopulateList(Playlist& p , StyledList* list)
+void PopulateList(Playlist& p , UIGenericList* list)
 {
     if(list == nullptr) return;
     list->Clear();
     for(SongInfo* s : p.songs)
     {
-        list->Add(s->fileName);
+        list->AddItem(s->fileName);
     }
 }
 
@@ -207,21 +207,26 @@ int main(int argc, char const *argv[])
 
 int main(int argc, char const *argv[])
 {
-    float length = 2.05f;
+    float length = 5.05f;
     float now = 1.02f;
     InitUI();
 
     // SelectableList list;
-    UIGenericList tracklist(0,0,30,10);
+    UIReorderList tracklist(0,0,30,10);
     tracklist.AddItem("A Kul Song 1");
     tracklist.AddItem("Despacito 3");
     tracklist.AddItem("Hello Kitty OST");
     tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
     tracklist.SetFocus(true);
 
-    StyledList playlist(0, 0, 30, 10);
+    UIGenericList playlist(0, 0, 30, 10);
     // playlist.Add("YOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYO");
-    playlist.Add("YOYOYOYO");
+    playlist.AddItem("YOYOYOYO");
+    playlist.AddItem("YaOYOYOYO");
+    playlist.AddItem("YOYasOYOfYO");
+    playlist.AddItem("YOYOYOYOf");
+    playlist.AddItem("YOYOYasdOYO");
+    playlist.AddItem("YOYOYOYOdd");
 
     StyledLine s(std::string("A Kul Song 1"), 0,0);
     refresh();
@@ -246,10 +251,11 @@ int main(int argc, char const *argv[])
         tracklist.Print(row, col);
         playlist.Print(row, col);
         // Separator
-        PrintVertSeparator(row, col, 0, row - 4, w + 1, '|');
+        // PrintVertSeparator(row, col, 0, row - 4, w + 1, '|');
 
-        PrintHoriSeparator(row, col, 0, col, row - 3, '-');
+        PrintHoriSeparator(row, col, 0, col, row - 3, (wint_t)L'═');
 
+        PrintVertSeparator(row, col, 0, row - 4, w + 1, (wint_t)L'║');
         UISoundPopup::Print(row, col);
 
         refresh();
@@ -263,15 +269,17 @@ int main(int argc, char const *argv[])
         else if(c == '\t')
         {
             // Switch Focus
+            tracklist.SetFocus(playlist.GetFocus());
+            playlist.SetFocus(!tracklist.GetFocus());
 
         }
         bool b = tracklist.Update(c);
-        bool d = playlist.Update(0);
+        bool d = playlist.Update(c);
         if(b)
         {
             const StyledLine* line = tracklist.GetSelectedItem();
             s.data = line->data;
-            // tracklist.ApplySelectedToCurrent();
+            tracklist.SetCurrentToSelected();
         }
         UISoundPopup::Update(c, 3000u);
     }
@@ -290,8 +298,8 @@ using namespace mk;
 int main(int argc, char const *argv[])
 {
     SoundSystem system;
-    StyledList tracklist(0,0,100,50);
-    StyledList playlist(0,0,100,50);
+    UIReorderList tracklist(0,0,100,50);
+    UIReorderList playlist(0,0,100,50);
 
     MKArgs a = ParseArgs(argc, argv);
 
@@ -396,26 +404,26 @@ int main(int argc, char const *argv[])
                 continue;
             }
             system.TrackStart();
-            playlist.ApplySelectedToCurrent();
-            StyledLine* line =  playlist.GetCurrentSelectedItem();
+            playlist.SetCurrentToSelected();
+            const StyledLine* line =  playlist.GetCurrentItem();
             s.data = line->data;
         }
         // If Song has ended TODO: add autoplay toggle option
         if(length - now <= 0.0001f && now > 0.0001f)
         {
             system.TrackPause();
-            if(!playlist.Next())
+            if(!playlist.ChangeCurrent(1))
             {
                 continue;
             }
             // if(!system.LoadTrack(playlist.GetItem(playlist.GetCurrent())->data.c_str()))
-            if(!system.LoadTrack( p.songs[playlist.GetCurrent()]->filePath.c_str() ))
+            if(!system.LoadTrack( p.songs[playlist.GetCurrentItemIndex()]->filePath.c_str() ))
             {
                 continue;
             }
             system.TrackStart();
 
-            StyledLine* line = playlist.GetCurrentSelectedItem();
+            const StyledLine* line = playlist.GetCurrentItem();
             s.data = line->data;
         }
 

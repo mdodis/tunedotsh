@@ -128,7 +128,7 @@ namespace mk{
         {
             elements[i]->x = x ;
             elements[i]->y = y + count;
-            if(i == selectedItem)
+            if(i == selectedItem && isFocus)
                 attron(A_STANDOUT);
             elements[i]->Print(row, col);
             attroff(A_STANDOUT);
@@ -160,7 +160,7 @@ namespace mk{
         
         for(size_t i = 0; i < elements.size(); i++)
         {
-            if(i == selectedItem)
+            if(i == selectedItem && isFocus)
                 elements[i]->Update(true);
             else
                 elements[i]->Update(false);
@@ -181,91 +181,35 @@ namespace mk{
         }
     }
 
+    
+    /*
+     *  UIReorderList
+     * =========== 
+     */
 
-    void StyledList::ChangeSelection(int value)
-    {
-        if((int)selectedItem + value >= 0 && (int)(selectedItem + value) < (int)lines.size())
-        {
-            selectedItem += value;
-        }
-        if(selectedItem >= displayStart + h || selectedItem < displayStart)
-        {
-            displayStart += value;
-        }
-    }
-
-    bool StyledList::Update(int ch)
-    {
-        switch(ch)
-        {
-            case KEY_UP:
-                ChangeSelection(-1);
-                break;
-            case KEY_DOWN:
-                ChangeSelection(1);
-                break;
-            case '\n':
-                return true;
-                break;
-            default:
-                break;
-        }
-        // lines[selectedItem]->Update();
-        
-        for(size_t i = 0; i < lines.size(); i++)
-        {
-            if(i == selectedItem)
-                lines[i]->Update(true);
-            else
-                lines[i]->Update(false);
-        }
-        
-        return false;
-
-    }
-    void StyledList::Add(std::string element)
-    {
-        StyledLine* l = new StyledLine(element, x,y + lines.size(),w);
-        lines.push_back(l);
-    }
-
-    void StyledList::Remove(std::string element)
-    {
-        std::vector<StyledLine*>::iterator i;
-        
-        for( i = lines.begin(); i != lines.end(); i++)
-        {
-            if((**i).data == element)
-            {
-                delete *i;
-                lines.erase(i);
-            }
-        }
-        
-    }
-
-    void StyledList::Print(int row, int col) const
+    void UIReorderList::Print(uint row, uint col)
     {
         unsigned int count = 0;
-        size_t tmp = lines.size() > (size_t)h ? h : lines.size();
-        if(displayStart + h > lines.size())
+        size_t tmp = elements.size() > (size_t)h ? h : elements.size();
+        if(displayStart + h > elements.size())
         {
-            tmp = lines.size();
+            tmp = elements.size();
         }
         else {tmp = displayStart + h;}
         for(unsigned long i = displayStart; i < tmp; ++i)
         {
-            lines[i]->x = x ;
-            lines[i]->y = y + count;
-            if(i == selectedItem)
+            elements[i]->x = x ;
+            elements[i]->y = y + count;
+            if(i == selectedItem && isFocus)
                 attron(A_STANDOUT);
-            else if(i == current)
+            else if(i == currentItem)
                 attron(A_UNDERLINE);
-            lines[i]->Print(row, col);
+            elements[i]->Print(row, col);
             attroff(A_STANDOUT);
             attroff(A_UNDERLINE);
             count++;
         }
+
     }
     /*
      * returns the amount of cols that now should span
@@ -346,6 +290,21 @@ namespace mk{
 
     }
 
+    void PrintVertSeparator(unsigned int row, unsigned int col, unsigned int starty, unsigned int endy, unsigned int x, wint_t c)
+    {
+        if (starty < 0 || endy > row || endy - starty > row || x > col)
+            return;
+        unsigned int i;
+        for(i = starty; i <= endy; ++i)
+        {
+            mvprintw(i, x, "%lc", c);
+        }
+
+        mvprintw(i, x, "%lc", L'╩');
+
+    }
+
+
     void PrintHoriSeparator(unsigned int row, unsigned int col, unsigned int startx, unsigned int endx, unsigned int y, char c)
     {
         if (startx < 0 || endx > col || endx - startx > col || y > row)
@@ -353,6 +312,17 @@ namespace mk{
         for (int i = startx; i <= endx; ++i)
         {
             mvprintw(y, i, "%c", c);
+        }
+
+    }
+
+    void PrintHoriSeparator(unsigned int row, unsigned int col, unsigned int startx, unsigned int endx, unsigned int y, wint_t c)
+    {
+        if (startx < 0 || endx > col || endx - startx > col || y > row)
+            return;
+        for (int i = startx; i <= endx; ++i)
+        {
+            mvprintw(y, i, "%lc", c);
         }
 
     }

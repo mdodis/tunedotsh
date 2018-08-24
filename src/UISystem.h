@@ -94,15 +94,21 @@ namespace mk
         unsigned long selectedItem = 0;
         virtual void ChangeSelection(int value);
 
-    private:
         bool isFocus = false;
     };
 
-    class UIPlaylist : public UIGenericList
+    class UIReorderList : public UIGenericList
     {
     public:
-        UIPlaylist(uint x, uint y, uint w, uint h) : UIGenericList(x,y,w,h)
+        UIReorderList(uint x, uint y, uint w, uint h) : UIGenericList(x,y,w,h)
         {}
+
+        void Print(uint row, uint col) override;
+        bool Update(int ch) override
+        {
+            return UIGenericList::Update(ch);
+        }
+
 
         inline ulong            GetCurrentItemIndex     () const {return currentItem;}
         const StyledLine* const GetCurrentItem          () const {return elements[currentItem];}
@@ -115,7 +121,7 @@ namespace mk
         inline bool             ChangeCurrent           (long val)
         {
             long change = (long)currentItem + val;
-            if (change > elements.size() || change < 0)
+            if (change >= elements.size() || change < 0)
                 return false;
             currentItem = change;
             return true;
@@ -125,69 +131,6 @@ namespace mk
         unsigned long currentItem = 0;
 
     };
-
-    class StyledList
-    {
-    public:
-        void Add(std::string element);
-        void Remove(std::string element);
-        void Print(int row, int col) const;
-        inline void Clear() {lines.clear();}
-
-        bool Update(int ch);
-        StyledList(int x, int y, int w, int h)
-            :x(x), y(y), w(w), h(h) {}
-
-        // Returns currently selected item
-        inline StyledLine*          GetSelectedItem         () const {return lines[selectedItem];}
-        //  Returns currently selected item index
-        inline unsigned long        GetSelectedItemIndex    () const {return selectedItem;}
-        // Get an item by index
-        inline const StyledLine*    GetItem                 (unsigned int index) const { return lines[index];} 
-
-        // Quick call to lines.size()
-        inline size_t GetSize() const { return lines.size();}
-
-        inline unsigned long    GetCurrent              () const {return current;}
-        inline StyledLine*      GetCurrentSelectedItem  () const {return lines[current];}
-        inline void             ApplySelectedToCurrent  () {current = selectedItem;}
-
-        inline bool Next() {
-            if(current+1 < lines.size())
-            {
-                current++;
-                return true;
-            }
-            return false;
-        }
-
-        inline void SetH(int nh) {h = nh;}
-        inline void SetW(int nw)
-        {
-            w = nw;
-            for(auto* s : lines)
-            {
-                s->w = nw;
-            }
-        }
-
-        inline void SetX(int nx) {x = nx;}
-        inline void SetY(int ny) {y = ny;}
-
-        inline int GetX () const {return x;}
-        inline int GetY () const {return y;}
-
-    private:
-        int x, y, w, h;
-        size_t displayStart = 0;
-        std::vector<StyledLine*> lines;
-        // bool isActive = true;
-        unsigned int selectedItem = 0;
-        unsigned long current = 0;
-        void ChangeSelection(int value);
-
-    };
-
 
     class UISoundPopup{
         static float            currentVolume;
@@ -228,8 +171,10 @@ namespace mk
      * Prints Vertical separator start from row: starty to endy, in the x collumn
      */
     void PrintVertSeparator(unsigned int row, unsigned int col, unsigned int starty, unsigned int endy, unsigned int x, char c);
+    void PrintVertSeparator(unsigned int row, unsigned int col, unsigned int starty, unsigned int endy, unsigned int x, wint_t c);
 
     void PrintHoriSeparator(unsigned int row, unsigned int col, unsigned int startx, unsigned int endx, unsigned int y, char c);
+    void PrintHoriSeparator(unsigned int row, unsigned int col, unsigned int startx, unsigned int endx, unsigned int y, wint_t c);
 
     /*
      * Determines whether or not all the
