@@ -42,6 +42,11 @@ namespace mk
         size_t startOffset = 0;
     };
 
+    /*! \brief List with selectable items
+     *         Moving with arrow keys and pressing enter switches the selection.
+     *
+     *  Detailed description starts here.
+     */
     class UIGenericList
     {
     public:
@@ -104,10 +109,7 @@ namespace mk
         {}
 
         void Print(uint row, uint col) override;
-        bool Update(int ch) override
-        {
-            return UIGenericList::Update(ch);
-        }
+        bool Update(int ch) override;
 
 
         inline ulong            GetCurrentItemIndex     () const {return currentItem;}
@@ -129,6 +131,17 @@ namespace mk
 
     private:
         unsigned long currentItem = 0;
+
+        void PushSelected(int m);
+        inline bool SwapItem(size_t a, size_t b)
+        {
+            if (a < elements.size() && b < elements.size())
+            {
+                std::swap(elements[a], elements[b]);
+                return true;
+            }
+            return false;
+        }
 
     };
 

@@ -1,5 +1,3 @@
-/*
- */
 // #define PLAYLIST_TEST
 #define GUI_TEST
 // #define FMOD_TEST
@@ -67,6 +65,7 @@ void InitUI()
     initscr();
     noecho();
     curs_set(0);
+    nonl();
     cbreak();
     timeout(500);
     keypad(stdscr, true);
@@ -212,20 +211,20 @@ int main(int argc, char const *argv[])
     InitUI();
 
     // SelectableList list;
-    UIReorderList tracklist(0,0,30,10);
+    UIGenericList tracklist(0,0,30,10);
     tracklist.AddItem("A Kul Song 1");
     tracklist.AddItem("Despacito 3");
     tracklist.AddItem("Hello Kitty OST");
     tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
     tracklist.SetFocus(true);
 
-    UIGenericList playlist(0, 0, 30, 10);
+    UIReorderList playlist(0, 0, 30, 10);
     // playlist.Add("YOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYO");
-    playlist.AddItem("YOYOYOYO");
-    playlist.AddItem("YaOYOYOYO");
-    playlist.AddItem("YOYasOYOfYO");
-    playlist.AddItem("YOYOYOYOf");
-    playlist.AddItem("YOYOYasdOYO");
+    playlist.AddItem("Song 2");
+    playlist.AddItem("Nightwish - Fishmaster");
+    playlist.AddItem("Metadeth");
+    playlist.AddItem("Greetings professor Falken");
+    playlist.AddItem("Song 465");
     playlist.AddItem("YOYOYOYOdd");
 
     StyledLine s(std::string("A Kul Song 1"), 0,0);
@@ -235,6 +234,7 @@ int main(int argc, char const *argv[])
 
     for(;;)
     {
+        int c;
         clear();
         int row, col;
         getmaxyx(stdscr, row, col);
@@ -258,12 +258,13 @@ int main(int argc, char const *argv[])
         PrintVertSeparator(row, col, 0, row - 4, w + 1, (wint_t)L'║');
         UISoundPopup::Print(row, col);
 
+
         refresh();
 
         usleep(3000);
 
         // Update
-        int c = getch();
+        c = getch();
         if(c == 'q')
             break;
         else if(c == '\t')
@@ -277,9 +278,9 @@ int main(int argc, char const *argv[])
         bool d = playlist.Update(c);
         if(b)
         {
-            const StyledLine* line = tracklist.GetSelectedItem();
+            const StyledLine* line = playlist.GetSelectedItem();
             s.data = line->data;
-            tracklist.SetCurrentToSelected();
+            playlist.SetCurrentToSelected();
         }
         UISoundPopup::Update(c, 3000u);
     }

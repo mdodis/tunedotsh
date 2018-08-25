@@ -2,7 +2,11 @@
 #include <curses.h>
 #include <iostream>
 #include <string>
+
+
 namespace mk{
+
+#define CTRL_KEYPRESS(k) ((k)  & 0x1f)
 
     void StyledLine::Print(int row, int col)
     {
@@ -186,6 +190,75 @@ namespace mk{
      *  UIReorderList
      * =========== 
      */
+
+    void UIReorderList::PushSelected(int m)
+    {
+        if (!SwapItem(selectedItem, selectedItem + m))
+            return;
+        // unsigned long tmp = currentItem;
+
+        if (selectedItem == currentItem)
+        {
+            selectedItem += m;
+            currentItem = selectedItem;
+        }
+        else if (currentItem == selectedItem + m)
+        {
+            currentItem = selectedItem;
+            selectedItem += m;
+        }
+        else
+            selectedItem += m;
+    }
+
+    bool UIReorderList::Update(int ch)
+    {
+        bool ret = false;
+        if (isFocus)
+        {
+            switch(ch)
+            {
+                case KEY_UP:
+                {
+                    ChangeSelection(-1);
+                }break;
+
+                case KEY_DOWN:
+                {
+                    ChangeSelection(1);
+                } break;
+
+                case KEY_SR:
+                {
+                    PushSelected(-1);
+                } break;
+
+                case KEY_SF:
+                {
+                    PushSelected(+1);
+                } break;
+
+                case '\n':
+                {
+                    ret = true;
+                } break;
+
+                default:
+                    break;
+            }
+        }
+        // lines[selectedItem]->Update();
+        
+        for(size_t i = 0; i < elements.size(); i++)
+        {
+            if(i == selectedItem && isFocus)
+                elements[i]->Update(true);
+            else
+                elements[i]->Update(false);
+        }
+        
+        return ret;   
+    }
 
     void UIReorderList::Print(uint row, uint col)
     {
