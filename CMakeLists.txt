@@ -27,6 +27,7 @@ elseif(WIN32)
 	include_directories(${PROJECT_SOURCE_DIR}/include/win32)
 	link_directories(${PROJECT_SOURCE_DIR}/lib/win32)
 
-	target_link_libraries(tunedotsh ${PROJECT_SOURCE_DIR}/lib/win32/pdcurses.lib ${PROJECT_SOURCE_DIR}/lib/win32/fmod64_vc.lib)
+	target_link_libraries(tunedotsh ${PROJECT_SOURCE_DIR}/lib/win32/pdcurses.lib ${PROJECT_SOURCE_DIR}/lib/win32/fmod64_vc.lib
+	user32.lib gdi32.lib advapi32.lib Comdlg32.lib shell32.lib)
 
 endif()

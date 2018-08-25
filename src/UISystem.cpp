@@ -5,6 +5,11 @@
 
 
 namespace mk{
+    #ifdef WIN32
+        #define KEY_SF KEY_SDOWN
+        #define KEY_SR KEY_SUP
+    #endif
+
 
 #define CTRL_KEYPRESS(k) ((k)  & 0x1f)
 
@@ -238,7 +243,7 @@ namespace mk{
                     PushSelected(+1);
                 } break;
 
-                case '\n':
+                case '\r':
                 {
                     ret = true;
                 } break;
@@ -247,6 +252,7 @@ namespace mk{
                     break;
             }
         }
+        return ret;
         // lines[selectedItem]->Update();
         
         for(size_t i = 0; i < elements.size(); i++)

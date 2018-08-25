@@ -27,7 +27,7 @@
 
 void usleep(__int64 usec)
 {
-    std::this_thread::sleep_for(std::chrono::seconds(usec));
+    std::this_thread::sleep_for(std::chrono::microseconds(usec));
 }
 
 // void usleep(__int64 usec) 
@@ -238,6 +238,10 @@ int main(int argc, char const *argv[])
         clear();
         int row, col;
         getmaxyx(stdscr, row, col);
+    #ifdef WIN32
+        resize_term(row,col);
+    #endif
+
         unsigned int w = col / 2 - 1;
         tracklist.SetW(w + 1);
         playlist.SetW(w);
@@ -274,8 +278,8 @@ int main(int argc, char const *argv[])
             playlist.SetFocus(!tracklist.GetFocus());
 
         }
-        bool b = tracklist.Update(c);
-        bool d = playlist.Update(c);
+        bool b = playlist.Update(c);
+        bool d = tracklist.Update(c);
         if(b)
         {
             const StyledLine* line = playlist.GetSelectedItem();

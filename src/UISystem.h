@@ -9,6 +9,9 @@ namespace mk
     #define MIN_COLS 5u
     #define MIN_ROWS 4u
 
+    #define uint unsigned int
+    #define ulong unsigned long
+
     struct StyledLine
     {
     /*
