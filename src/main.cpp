@@ -1,5 +1,15 @@
+/*
+ *  TODO
+ *  ====
+ *  -- Add Header Option In UIGenericList 
+ *  -- Create FileSystem.h + .cpp files to move file management stuff there
+ *  -- In FileSystem.h or w/e add support for config files
+ *  -- Create platform abstraction funcs( either compile with or separately as lib)
+ */
+
+
 // #define PLAYLIST_TEST
-#define GUI_TEST
+// #define GUI_TEST
 // #define FMOD_TEST
 
 #define MS_TO_MIN 1.6667E-5
@@ -105,25 +115,15 @@ MKArgs ParseArgs(int argc, char const * argv[])
     return out;
 }
 
-
-void PopulateList(json* queue, UIGenericList* list)
-{
-    for(auto it = queue->begin(); it != queue->end(); it++)
-    {
-        std::string s = *it;
-        list->AddItem(s);
-    }
-}
-
-void PopulateList(Playlist& p , UIGenericList* list)
-{
-    if(list == nullptr) return;
-    list->Clear();
-    for(SongInfo* s : p.songs)
-    {
-        list->AddItem(s->fileName);
-    }
-}
+// void PopulateList(Playlist& p , UIGenericList* list)
+// {
+//     if(list == nullptr) return;
+//     list->Clear();
+//     for(SongInfo* s : p.songs)
+//     {
+//         list->AddItem(s->fileName);
+//     }
+// }
 
 #ifdef FMOD_TEST
 int main(int argc, char const *argv[])
@@ -131,8 +131,6 @@ int main(int argc, char const *argv[])
     SoundSystem sSystem;
     sSystem.LoadTrack("music2.ogg");
     FMOD::Sound* s = sSystem.GetSound();
-
-
 
 
     SongDetails* dt = SongDetails::From_ID3V1(s);
@@ -170,7 +168,7 @@ int main(int argc, char const *argv[])
     SoundSystem s;
     Playlist p;
 
-
+    
     if(a.option == MKOption::Directory)
     {
         if(!PlaylistMgr::LoadPlaylistFromDir(a.path.c_str(), p))
@@ -216,6 +214,22 @@ int main(int argc, char const *argv[])
     tracklist.AddItem("Despacito 3");
     tracklist.AddItem("Hello Kitty OST");
     tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
+    tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
+    tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
+    tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
+    tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
+    tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
+    tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
+    tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
+    tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
+    tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
+    tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
+    tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
+    tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
+    tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
+    tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
+    tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
+    tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
     tracklist.SetFocus(true);
 
     UIReorderList playlist(0, 0, 30, 10);
@@ -226,11 +240,30 @@ int main(int argc, char const *argv[])
     playlist.AddItem("Greetings professor Falken");
     playlist.AddItem("Song 465");
     playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
+    playlist.AddItem("YOYOYOYOdd");
 
-    StyledLine s(std::string("A Kul Song 1"), 0,0);
+    UILine s(std::string("A Kul Song 1"), 0,0);
     refresh();
-    int barSize = 20;
-    float volume = 1.0f;
+    // int barSize = 20;
+    // float volume = 1.0f;
+
 
     for(;;)
     {
@@ -245,13 +278,16 @@ int main(int argc, char const *argv[])
         unsigned int w = col / 2 - 1;
         tracklist.SetW(w + 1);
         playlist.SetW(w);
-
         playlist.SetX(w + 2);
+
+        playlist.SetH(row - 3);
+        tracklist.SetH(row - 3);
 
         s.y = row-2;
         s.w = col;
         s.Print(row, col);
-        ProgressBar(length, now, row, col, row - 1);
+        // ProgressBar(length, now, row, col, row - 1);
+        ProgressBarGeneric(length, now, row, col, 0, row - 1, col);
         tracklist.Print(row, col);
         playlist.Print(row, col);
         // Separator
@@ -260,8 +296,8 @@ int main(int argc, char const *argv[])
         PrintHoriSeparator(row, col, 0, col, row - 3, (wint_t)L'═');
 
         PrintVertSeparator(row, col, 0, row - 4, w + 1, (wint_t)L'║');
-        UISoundPopup::Print(row, col);
 
+        UISoundPopup::Print(row, col);
 
         refresh();
 
@@ -278,11 +314,21 @@ int main(int argc, char const *argv[])
             playlist.SetFocus(!tracklist.GetFocus());
 
         }
+        else if (c == '>')
+        {
+            now += 5.f / 60.f;
+        }
+        else if (c == '<')
+        {
+            now -= 5.f / 60.f;
+        }
+        if ( now < 0.f) now = 0.f;
+        if (now > length) now = length;
         bool b = playlist.Update(c);
-        bool d = tracklist.Update(c);
+        bool d = tracklist.Update(c, row, col);
         if(b)
         {
-            const StyledLine* line = playlist.GetSelectedItem();
+            const UITrackLine* line = playlist.GetSelectedItem();
             s.data = line->data;
             playlist.SetCurrentToSelected();
         }
@@ -303,9 +349,9 @@ using namespace mk;
 int main(int argc, char const *argv[])
 {
     SoundSystem system;
-    UIReorderList tracklist(0,0,100,50);
+    UIGenericList tracklist(0,0,100,50);
     UIReorderList playlist(0,0,100,50);
-
+    tracklist.SetFocus(true);
     MKArgs a = ParseArgs(argc, argv);
 
     Playlist p;
@@ -316,7 +362,8 @@ int main(int argc, char const *argv[])
             {
                 return -1;
             }
-            PopulateList(p, &playlist);
+            // PopulateList(p, &playlist);
+            playlist.SetPlaylist(&p);
         } break;
 
         case MKOption::DirectoryRecursive:{
@@ -324,7 +371,9 @@ int main(int argc, char const *argv[])
             {
                 return -1;
             }
-            PopulateList(p, &playlist);
+            // PopulateList(p, &playlist);
+            playlist.SetPlaylist(&p);
+            
         } break;
 
         case MKOption::SinglePlay:
@@ -344,7 +393,7 @@ int main(int argc, char const *argv[])
     }
     // size_t current = 0;
     InitUI();
-    StyledLine s(playlist.GetItem(0)->data, 0,0);
+    UILine s(playlist.GetItem(0)->data, 0,0);
     
     system.LoadTrack(p.songs[0]->filePath.c_str());
     system.TrackStart();
@@ -366,21 +415,19 @@ int main(int argc, char const *argv[])
         float length;
         unsigned int len;
         float now = 0.0f;
-        FMOD::Sound* sound = system.GetSound();
-        sound->getLength(&len,FMOD_TIMEUNIT_MS );
-        length = (double)len * MS_TO_MIN;
-        FMOD::Channel* channel;
-        channel = system.GetChannel();
-        len = 0u;
-        if(channel)
-            channel->getPosition(&len, FMOD_TIMEUNIT_MS);
+        // FMOD::Sound* sound = system.GetSound();
+        // sound->getLength(&len,FMOD_TIMEUNIT_MS );
 
-        if (!len || channel == nullptr)
-            now = 0.f;
-        else
-            now = (double)len * MS_TO_MIN;
-
-        ProgressBar(length, now, row, col, row - 1);
+        // length = (double)len * MS_TO_MIN;
+        try{
+            length = system.GetSoundLength();
+            now = system.GetSoundTime();
+            // ProgressBar(length, now, row, col, row - 1);
+            ProgressBarGeneric(length, now, row, col, 0, row - 1, col);
+        } catch( std::runtime_error& s)
+        {
+            // TODO: Log error in status bar
+        }
         playlist.Print(row, col);
 
 
@@ -399,22 +446,34 @@ int main(int argc, char const *argv[])
         {
             system.TogglePlaying();
         }
-        bool b = playlist.Update(c);
-        // TODO: Fix current playing song not changing
+        else if(c == '\t')
+        {
+            // Switch Focus
+            tracklist.SetFocus(playlist.GetFocus());
+            playlist.SetFocus(!tracklist.GetFocus());
+
+        }
+        else if (c == '>')
+        {
+            system.AddSoundTime(5.0 / 60.0);
+        }
+        bool b = playlist.Update(c, row, col);
+        tracklist.Update(c, row, col);
         if(b)
         {
+            // const std::vector<UITrackLine*> v = playlist.GetElVec();
             system.TrackPause();
-            if(!system.LoadTrack(p.songs[playlist.GetSelectedItemIndex()]->filePath.c_str()))
+            if(!system.LoadTrack(p.songs[playlist.GetSelectedItem()->trackNumber]->filePath.c_str()))
             {
                 continue;
             }
             system.TrackStart();
             playlist.SetCurrentToSelected();
-            const StyledLine* line =  playlist.GetCurrentItem();
+            const UITrackLine* line =  playlist.GetCurrentItem();
             s.data = line->data;
         }
         // If Song has ended TODO: add autoplay toggle option
-        if(length - now <= 0.0001f && now > 0.0001f)
+        if((length - now <= 0.0001f && now > 0.0001f) || c == 'n')
         {
             system.TrackPause();
             if(!playlist.ChangeCurrent(1))
@@ -422,13 +481,13 @@ int main(int argc, char const *argv[])
                 continue;
             }
             // if(!system.LoadTrack(playlist.GetItem(playlist.GetCurrent())->data.c_str()))
-            if(!system.LoadTrack( p.songs[playlist.GetCurrentItemIndex()]->filePath.c_str() ))
+            if(!system.LoadTrack( p.songs[playlist.GetCurrentItem()->trackNumber]->filePath.c_str() ))
             {
                 continue;
             }
             system.TrackStart();
 
-            const StyledLine* line = playlist.GetCurrentItem();
+            const UITrackLine* line = playlist.GetCurrentItem();
             s.data = line->data;
         }
 

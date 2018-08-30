@@ -11,9 +11,12 @@ namespace mk{
     #endif
 
 
-#define CTRL_KEYPRESS(k) ((k)  & 0x1f)
+    #define CTRL_KEYPRESS(k) ((k)  & 0x1f)
 
-    void StyledLine::Print(int row, int col)
+
+
+
+    void UILine::Print(int row, int col)
     {
         std::string outputData = data;
         if(data.length() > (unsigned long)w)
@@ -67,7 +70,7 @@ namespace mk{
         mvprintw(y, x, outputData.c_str());
     }
 
-    void StyledLine::Update(bool sel)
+    void UILine::Update(bool sel)
     {
         if(data.length() > (unsigned long)w)
         {
@@ -91,21 +94,20 @@ namespace mk{
             }
         }
     }
-
 /*
  *  UIGenericList
  *  =============
  */
 
-    void UIGenericList::AddItem(std::string element)
+    void UIGenericList::AddItem(std::string element, ulong xtra)
     {
-        StyledLine* l = new StyledLine(element, x,y + elements.size(),w);
+        UITrackLine* l = new UITrackLine(element, x,y + elements.size(),w, xtra);
         elements.push_back(l);
     }
 
     void UIGenericList::RemoveItem(std::string element)
     {
-        std::vector<StyledLine*>::iterator i;
+        std::vector<UITrackLine*>::iterator i;
         
         for( i = elements.begin(); i != elements.end(); i++)
         {
@@ -120,7 +122,7 @@ namespace mk{
 
     void UIGenericList::RemoveItem(uint index)
     {
-        std::vector<StyledLine*>::iterator i;
+        std::vector<UITrackLine*>::iterator i;
         elements.erase(elements.begin() + index);
     }
 
@@ -131,8 +133,13 @@ namespace mk{
         if(displayStart + h > elements.size())
         {
             tmp = elements.size();
+            displayStart = 0;
         }
-        else {tmp = displayStart + h;}
+        else
+        {
+            tmp = displayStart + h ;
+        }
+
         for(unsigned long i = displayStart; i < tmp; ++i)
         {
             elements[i]->x = x ;
@@ -142,7 +149,9 @@ namespace mk{
             elements[i]->Print(row, col);
             attroff(A_STANDOUT);
             count++;
-        }  
+        
+        }
+        // mvprintw(0,0,"%ld : %ld", displayStart + h, selectedItem);
     }
 
     bool UIGenericList::Update(int ch)
@@ -175,9 +184,49 @@ namespace mk{
                 elements[i]->Update(false);
         }
         
+
         return ret;
     }
 
+    bool UIGenericList::Update(int ch, uint row, uint col)
+    {
+        bool ret = false;
+        if (isFocus)
+        {
+            switch(ch)
+            {
+                case KEY_UP:
+                    ChangeSelection(-1);
+                    break;
+                case KEY_DOWN:
+                    ChangeSelection(1);
+                    break;
+                case '\n':
+                    ret = true;
+                    break;
+                default:
+                    break;
+            }
+        }
+        // lines[selectedItem]->Update();
+        
+        for(size_t i = 0; i < elements.size(); i++)
+        {
+            if(i == selectedItem && isFocus)
+                elements[i]->Update(true);
+            else
+                elements[i]->Update(false);
+        }
+        
+
+        if (selectedItem >= displayStart + h)
+        {
+            selectedItem = displayStart + h - 1;
+        }
+
+
+        return ret;
+    }
     void UIGenericList::ChangeSelection(int value)
     {
         if((int)selectedItem + value >= 0 && (int)(selectedItem + value) < (int)elements.size())
@@ -187,6 +236,10 @@ namespace mk{
         if(selectedItem >= displayStart + h || selectedItem < displayStart)
         {
             displayStart += value;
+        }
+        if (displayStart > elements.size())
+        {
+            displayStart = 0;
         }
     }
 
@@ -252,7 +305,6 @@ namespace mk{
                     break;
             }
         }
-        return ret;
         // lines[selectedItem]->Update();
         
         for(size_t i = 0; i < elements.size(); i++)
@@ -264,6 +316,63 @@ namespace mk{
         }
         
         return ret;   
+    }
+
+    bool UIReorderList::Update(int ch, uint row, uint col)
+    {
+
+        bool ret = false;
+        if (isFocus)
+        {
+            switch(ch)
+            {
+                case KEY_UP:
+                {
+                    ChangeSelection(-1);
+                }break;
+
+                case KEY_DOWN:
+                {
+                    ChangeSelection(1);
+                } break;
+
+                case KEY_SR:
+                {
+                    PushSelected(-1);
+                } break;
+
+                case KEY_SF:
+                {
+                    PushSelected(+1);
+                } break;
+
+                case '\r':
+                {
+                    ret = true;
+                } break;
+
+                default:
+                    break;
+            }
+        }
+        // lines[selectedItem]->Update();
+ 
+        if (selectedItem >= displayStart + h)
+        {
+            selectedItem = displayStart + h - 1;
+        }
+
+       
+        for(size_t i = 0; i < elements.size(); i++)
+        {
+            if(i == selectedItem && isFocus)
+                elements[i]->Update(true);
+            else
+                elements[i]->Update(false);
+        }
+        
+        return ret;   
+
     }
 
     void UIReorderList::Print(uint row, uint col)
@@ -290,6 +399,7 @@ namespace mk{
         }
 
     }
+
     /*
      * returns the amount of cols that now should span
      * with a total size of 'col' columns and the limits
@@ -315,7 +425,7 @@ namespace mk{
         int curCol = CountBars(now, length, col);
         if(curCol - 1 <= 0) return;
         std::string p(curCol - 1, '=');
-        p += '>';
+        // p += '>';
         // std::cout << curCol << ' ' << p << '\n';
         mvprintw(y,0 , p.c_str());
     }
@@ -327,14 +437,16 @@ namespace mk{
         if(length <= 0.0f || length < now)
             return;
 
-        if(size + 2 > col) return;
+        if(size > col) return;
 
-        int curCol = CountBars(now, length, size);
+        int curCol = CountBars(now, length, size - 2);
         std::string p;
-        if(curCol -1 > 0)
-            p.insert(0,curCol - 1, '=');
-        if(size - curCol - 1 > 0)
-            p.insert(p.end(), size - curCol , ' ');
+        if(curCol > 0)
+            p.insert(0,curCol, '=');
+        // else if (curCol == 0)
+            // p.insert(p.end(), size - 2, ' ');
+        if(size - curCol - 2> 0)
+            p.insert(p.end(), size - curCol - 2 , ' ');
         p += ']';
         p.insert(0, "[");
         mvprintw(y, x, p.c_str());
@@ -422,19 +534,21 @@ namespace mk{
     void UISoundPopup::Print(unsigned int row, unsigned int col)
     {
         // if (timer > 0.000001f && timer < timeout)
+        attron(A_REVERSE);
         if (shouldAppear)
             ProgressBarGeneric(1.0f, currentVolume, row, col, (col-barSize)/2, 0, barSize + 1);
+        attroff(A_REVERSE);
     }
     void UISoundPopup::Update(int ch, unsigned long elapsedTime)
     {
-        if(ch == 'k')
+        if(ch == 'j' || ch == '-')
         {
             shouldAppear = true;
             timer = 0.f;
             if(currentVolume > 0.f)
                 currentVolume -= volumeIncrement;
         }
-        else if (ch == 'j')
+        else if (ch == 'k' || ch == '+')
         {
             shouldAppear = true;
             timer = 0.f;

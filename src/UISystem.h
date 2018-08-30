@@ -2,7 +2,14 @@
 #include <string>
 #include <string.h>
 #include <curses.h>
+#include <exception>
 #include <vector>
+
+#include <json.hpp>
+#include "SoundSystem.h"
+
+using json = nlohmann::json;
+
 
 namespace mk
 {
@@ -12,35 +19,41 @@ namespace mk
     #define uint unsigned int
     #define ulong unsigned long
 
-    struct StyledLine
+    struct UILine
     {
-    /*
-     *  Scrolling Line
-     *  2 types of selections: current and selected
-     *  - selected stands for what the user is highlighting
-     *  - current is what is currently playing
-     *  
-     *  current can become the selected item if Apply or Enter
-     *  is pressed on what song to play
-     */
     public: 
         std::string     data;
         unsigned int    x, y, w;
         bool            isAnimated = false;
         unsigned int    time = 0;
 
-        StyledLine(const std::string& s ,int x, int y, int w = -1)
+        UILine(const std::string& s ,int x, int y, int w = -1, ulong xtra = -1)
             :data(s), x(x), y(y), w(w){
                 if(w == -1)
                     w = s.size();
             }
-        StyledLine(const char* s ,int x, int y, int w= -1)
+        UILine(const char* s ,int x, int y, int w= -1, ulong xtra = -1)
             :data(s), x(x), y(y), w(w){
                 if(w == -1)
                     w = strlen(s);
             }
         void Update (bool sel);
         void Print  (int row, int col);
+    private: 
+        size_t startOffset = 0;
+    };
+
+    struct UITrackLine : UILine
+    {
+    public: 
+        unsigned long   trackNumber;
+
+        UITrackLine(const std::string& s ,int x, int y, int w = -1, ulong xtra = -1)
+            : UILine(s, x, y, w), trackNumber(xtra) {}
+
+        UITrackLine(const char* s ,int x, int y, int w= -1, ulong xtra = -1)
+            : UILine(s, x, y, w), trackNumber(xtra) {}
+
     private: 
         size_t startOffset = 0;
     };
@@ -53,13 +66,13 @@ namespace mk
     class UIGenericList
     {
     public:
-
         UIGenericList(uint x, uint y, uint w, uint h)
             :x(x), y(y), w(w), h(h) {}
+ 
         /*
          *  List Methods
          */
-        virtual void        AddItem     (std::string element);
+        virtual void        AddItem     (std::string element, ulong xtra = 0);
         virtual void        RemoveItem  (std::string element);
         virtual void        RemoveItem  (uint index);
         inline virtual void Clear       () {elements.clear();}
@@ -68,11 +81,12 @@ namespace mk
 
         virtual void Print(uint row, uint col);
         virtual bool Update(int ch);
+        virtual bool Update(int ch, uint row, uint col);
 
         inline unsigned long      GetSelectedItemIndex    () const {return selectedItem;}
-        inline const StyledLine*  GetItem                 (unsigned long index)
+        inline const UITrackLine*  GetItem                 (unsigned long index)
             {return elements[index];}
-        inline const StyledLine* GetSelectedItem          () const 
+        inline const UITrackLine* GetSelectedItem          () const 
             {return elements[selectedItem];}
 
         inline void SetH(int nh) {h = nh;}
@@ -94,10 +108,14 @@ namespace mk
 
         inline bool GetFocus() const { return isFocus;}
         inline void SetFocus(bool value) {isFocus = value;}
+
+        inline const std::vector<UITrackLine*>& GetElVec() const { return elements; }
+
     protected:
         uint x, y, w, h;
         size_t displayStart = 0;
-        std::vector<StyledLine*> elements;
+        std::vector<UITrackLine*> elements;
+
         // bool isActive = true;
         unsigned long selectedItem = 0;
         virtual void ChangeSelection(int value);
@@ -113,10 +131,11 @@ namespace mk
 
         void Print(uint row, uint col) override;
         bool Update(int ch) override;
+        bool Update(int ch, uint row, uint col) override;
 
 
         inline ulong            GetCurrentItemIndex     () const {return currentItem;}
-        const StyledLine* const GetCurrentItem          () const {return elements[currentItem];}
+        const UITrackLine* const GetCurrentItem          () const {return elements[currentItem];}
 
         inline void             SetCurrentItemIndex     (ulong value) {currentItem = value; }
         inline void             SetCurrentToSelected    () {currentItem = selectedItem;}
@@ -132,6 +151,17 @@ namespace mk
             return true;
         }
 
+        inline void SetPlaylist(Playlist* p)
+        {
+            size_t index = 0;
+            this->Clear();
+            for(SongInfo* s : p->songs)
+            {
+                UITrackLine* l = new UITrackLine(s->fileName, x, y + elements.size(), w, index);
+                elements.push_back(l);
+                index++;
+            }
+        }
     private:
         unsigned long currentItem = 0;
 

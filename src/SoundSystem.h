@@ -60,6 +60,7 @@ namespace mk{
     };
 
 
+    #define MS_TO_MIN 1.6667E-5
 
     class SoundSystem
     {
@@ -113,6 +114,49 @@ namespace mk{
         void CreateStream(FMOD::Sound** pSound, const char* file);
         void PlayStream(FMOD::Sound* pSound, FMOD::Channel** channel);
 
+
+//      TODO Implement these
+        inline double GetSoundLength() const
+        {
+            unsigned int len;
+            FMOD_RESULT res = sound->getLength(&len, FMOD_TIMEUNIT_MS);
+            if (res != FMOD_OK)
+                throw std::runtime_error(FMOD_ErrorString(res));
+            return (double)len * MS_TO_MIN; 
+            
+        }
+        inline double GetSoundTime () const
+        {
+            unsigned int len;
+            FMOD_RESULT res = channel->getPosition(&len, FMOD_TIMEUNIT_MS);
+            if (res != FMOD_OK)
+                throw std::runtime_error(FMOD_ErrorString(res));
+            return (double)len * MS_TO_MIN;
+
+        }
+
+        void SetSoundTime (unsigned int time)
+        {
+            // double length = GetSoundLength();
+            // if ((double)time * MS_TO_MIN > length ) return;
+            FMOD_RESULT res = channel->setPosition(time , FMOD_TIMEUNIT_MS);
+            if (res != FMOD_OK)
+                throw std::runtime_error(FMOD_ErrorString(res));
+        }
+        void AddSoundTime (double time)
+        {
+            try {
+                SetSoundTime((unsigned int)(time / MS_TO_MIN) + (unsigned int )(GetSoundTime() / MS_TO_MIN));
+            } catch (std::runtime_error& e)
+            {
+                // TODO: LOG
+
+                return;
+            }
+        }
+
+        void AddSoundTimeRelative(double ratio);
+        bool GetSoundFinished() const;
     private:
         FMOD::System*   system      = nullptr;
         FMOD::Sound*    sound       = nullptr;
@@ -125,7 +169,7 @@ namespace mk{
     struct Playlist{
         // std::vector<std::string>    files;
         std::vector<SongInfo*>      songs;
-        size_t                      currentTrack = 0;
+        // size_t                      currentTrack = 0;
 
         inline void clear() {
             for (int i = 0; i < songs.size(); i++)
