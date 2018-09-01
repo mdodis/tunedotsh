@@ -6,7 +6,7 @@ file(GLOB SRCS src/*.cpp)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-
+set( CMAKE_EXPORT_COMPILE_COMMANDS 1 )
 add_executable(tunedotsh ${SRCS})
 
 if(UNIX AND NOT APPLE)

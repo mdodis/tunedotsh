@@ -53,9 +53,7 @@ namespace mk{
 
                     sub = data.substr(t,
                             w - sw - 1);
-                }
-                catch(const std::out_of_range& e)
-                {
+                } catch(const std::out_of_range& e){
                     std::cerr << e.what() << '\n';
                     sub = std::to_string( startOffset +w - data.length() - 1);
                     sub += ":";
@@ -67,6 +65,10 @@ namespace mk{
 
             outputData = tmp;
         }
+        // else
+        // {
+        //     outputData.append(w - data.length(), ' ');
+        // }
         mvprintw(y, x, outputData.c_str());
     }
 
@@ -397,7 +399,6 @@ namespace mk{
             attroff(A_UNDERLINE);
             count++;
         }
-
     }
 
     /*
@@ -518,12 +519,8 @@ namespace mk{
 
     }
 
-
-
-
     /*  UISoundPopup
      */
-
     float           UISoundPopup::currentVolume = 1.0f;
     float           UISoundPopup::timer = 0.0f;
     float           UISoundPopup::timeout = 1.5f;
@@ -531,13 +528,13 @@ namespace mk{
 
     unsigned int    UISoundPopup::barSize = 20;
     float           UISoundPopup::volumeIncrement = 0.1f;
+
     void UISoundPopup::Print(unsigned int row, unsigned int col)
     {
-        // if (timer > 0.000001f && timer < timeout)
-        attron(A_REVERSE);
+        attron(COLOR_PAIR(1));
         if (shouldAppear)
             ProgressBarGeneric(1.0f, currentVolume, row, col, (col-barSize)/2, 0, barSize + 1);
-        attroff(A_REVERSE);
+        attroff(COLOR_PAIR(1));
     }
     void UISoundPopup::Update(int ch, unsigned long elapsedTime)
     {

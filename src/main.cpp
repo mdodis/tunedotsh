@@ -2,14 +2,14 @@
  *  TODO
  *  ====
  *  -- Add Header Option In UIGenericList 
- *  -- Create FileSystem.h + .cpp files to move file management stuff there
+ *  -> Create FileSystem.h + .cpp files to move file management stuff there
  *  -- In FileSystem.h or w/e add support for config files
  *  -- Create platform abstraction funcs( either compile with or separately as lib)
  */
 
 
 // #define PLAYLIST_TEST
-// #define GUI_TEST
+#define GUI_TEST
 // #define FMOD_TEST
 
 #define MS_TO_MIN 1.6667E-5
@@ -20,6 +20,7 @@
 #include <vector>
 #include "SoundSystem.h"
 #include "UISystem.h"
+#include "Filesystem.h"
 #include <curses.h>
 #include <json.hpp>
 #include <locale.h>
@@ -40,6 +41,7 @@ void usleep(__int64 usec)
     std::this_thread::sleep_for(std::chrono::microseconds(usec));
 }
 
+// Alternate Windows usleep function using win32 API
 // void usleep(__int64 usec) 
 // { 
 //     HANDLE timer; 
@@ -77,12 +79,54 @@ void InitUI()
     curs_set(0);
     nonl();
     cbreak();
+    start_color();
     timeout(500);
     keypad(stdscr, true);
     refresh();
 
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);
 }
 
+typedef struct{
+    int argc;
+    const char ** argv;
+
+    void Args(int argc, char const * argv[])
+    {
+        this->argc = argc;
+        this->argv = argv;
+    }
+
+    unsigned short FindFullOption(const char* name) const
+    {
+        std::string query(name);
+        query.insert(0,"--");
+        for (unsigned short i = 1; i < argc; ++i)
+        {
+            std::string option(argv[i]);
+            if (option == query)
+            {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    unsigned short FindShortOption(const char* name) const
+    {
+        std::string query(name);
+        query.insert(0,"-");
+        for (unsigned short i = 1; i < argc; ++i)
+        {
+            std::string option(argv[i]);
+            if (option == query)
+            {
+                return i;
+            }
+        }
+        return 0;
+    }
+} ProgArgs;
 
 struct MKArgs{
     std::string     path;
@@ -95,26 +139,35 @@ MKArgs ParseArgs(int argc, char const * argv[])
 {
     MKArgs out;
     out.option = MKOption::Unspecified;
-    if(argc > 2)
+
+    ProgArgs a;
+    a.Args(argc, argv);
+    unsigned short pos;    
+    if ((pos = a.FindShortOption("d")))
     {
-        if(strcmp(argv[1],"-d") == 0)
+        if (pos + 1 < argc) 
         {
             out.option = MKOption::Directory;
+            out.path = argv[pos + 1];
         }
-        else if(strcmp(argv[1], "-dr") == 0)
+
+    }
+    else  if ((pos = a.FindShortOption("dr")))
+    {
+        if (pos + 1 < argc) 
         {
             out.option = MKOption::DirectoryRecursive;
+            out.path = argv[pos + 1];
         }
-        else if(strcmp(argv[1], "-p") == 0)
-        {
-            out.option = MKOption::PlaylistFile;
-        }
-        out.path = argv[2];
+    }
+    else if (argc == 2)
+    {
+        out.option = MKOption::SinglePlay;
+        out.path = argv[1];
     }
 
     return out;
 }
-
 // void PopulateList(Playlist& p , UIGenericList* list)
 // {
 //     if(list == nullptr) return;
@@ -167,7 +220,6 @@ int main(int argc, char const *argv[])
     MKArgs a = ParseArgs(argc, argv);
     SoundSystem s;
     Playlist p;
-
     
     if(a.option == MKOption::Directory)
     {
@@ -179,24 +231,47 @@ int main(int argc, char const *argv[])
     }
     else if(a.option == MKOption::DirectoryRecursive)
     {
+        std::cout << "DR\n";
         if(!PlaylistMgr::LoadPlaylistFromDir(a.path.c_str(), p, true))
         {
             std::cout << "ERR\n";
             return -1;
         }
     }
-
-    if (p.songs.size() == 0)
-        return -1;
-    for(auto& it : p.songs)
+    else if (a.option == MKOption::SinglePlay)
     {
-        std::cout << it->fileName << '\n';
-        std::cout << it->filePath << '\n';
+        std::string file(a.path);
+        std::string path;
+        size_t pos = file.rfind('/');
+        path = file.substr(0, pos + 1);
+        if (!PlaylistMgr::LoadPlaylistFromDir(path.c_str(), p))
+        {
+            std::cout << "ERR\n";
+            return -1;
+        }
+        for (size_t i = 0; i < p.songs.size(); i++)
+        {
+            if (p.songs[i]->filePath == file && i != 0)
+            {
+                std::swap(p.songs[0], p.songs[i]);
+            }
+        }
     }
 
 
-    s.LoadTrack(p.songs[0]->filePath.c_str());
-    s.TrackStart();
+    
+//    if (p.songs.size() == 0)
+//        return -1;
+//    for(auto& it : p.songs)
+//    {
+//        std::cout << it->fileName << '\n';
+//        std::cout << it->filePath << '\n';
+//    }
+//
+//
+//    s.LoadTrack(p.songs[0]->filePath.c_str());
+//    
+//    s.TrackStart();
     std::cin.get();
 }
 
@@ -207,7 +282,6 @@ int main(int argc, char const *argv[])
     float length = 5.05f;
     float now = 1.02f;
     InitUI();
-
     // SelectableList list;
     UIGenericList tracklist(0,0,30,10);
     tracklist.AddItem("A Kul Song 1");
@@ -231,7 +305,6 @@ int main(int argc, char const *argv[])
     tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
     tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
     tracklist.SetFocus(true);
-
     UIReorderList playlist(0, 0, 30, 10);
     // playlist.Add("YOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYO");
     playlist.AddItem("Song 2");
@@ -258,13 +331,11 @@ int main(int argc, char const *argv[])
     playlist.AddItem("YOYOYOYOdd");
     playlist.AddItem("YOYOYOYOdd");
     playlist.AddItem("YOYOYOYOdd");
-
     UILine s(std::string("A Kul Song 1"), 0,0);
     refresh();
     // int barSize = 20;
     // float volume = 1.0f;
-
-
+  
     for(;;)
     {
         int c;
@@ -292,17 +363,18 @@ int main(int argc, char const *argv[])
         playlist.Print(row, col);
         // Separator
         // PrintVertSeparator(row, col, 0, row - 4, w + 1, '|');
-
         PrintHoriSeparator(row, col, 0, col, row - 3, (wint_t)L'═');
 
         PrintVertSeparator(row, col, 0, row - 4, w + 1, (wint_t)L'║');
 
+        // PrintVertSeparator(row, col, 0, row - 4, col / 2 + 1, '|');
         UISoundPopup::Print(row, col);
 
         refresh();
 
-        usleep(3000);
 
+        
+        usleep(3000);
         // Update
         c = getch();
         if(c == 'q')
@@ -324,7 +396,7 @@ int main(int argc, char const *argv[])
         }
         if ( now < 0.f) now = 0.f;
         if (now > length) now = length;
-        bool b = playlist.Update(c);
+        bool b = playlist.Update(c, row, col);
         bool d = tracklist.Update(c, row, col);
         if(b)
         {
@@ -351,7 +423,7 @@ int main(int argc, char const *argv[])
     SoundSystem system;
     UIGenericList tracklist(0,0,100,50);
     UIReorderList playlist(0,0,100,50);
-    tracklist.SetFocus(true);
+    playlist.SetFocus(true);
     MKArgs a = ParseArgs(argc, argv);
 
     Playlist p;
@@ -413,7 +485,7 @@ int main(int argc, char const *argv[])
 
         // Draws Progress bar
         float length;
-        unsigned int len;
+        // unsigned int len;
         float now = 0.0f;
         // FMOD::Sound* sound = system.GetSound();
         // sound->getLength(&len,FMOD_TIMEUNIT_MS );
@@ -431,14 +503,16 @@ int main(int argc, char const *argv[])
         playlist.Print(row, col);
 
 
-        PrintVertSeparator(row, col, 0, row - 4, col / 2 + 1, '|');
+        PrintVertSeparator(row, col, 0, row - 4, col / 2 , '|');
 
         PrintHoriSeparator(row, col, 0, col, row - 3, '-');
 
+        attron(COLOR_PAIR(1));
         UISoundPopup::Print(row, col);
 
+        attroff(COLOR_PAIR(1));
         refresh();
-
+ 
         int c = getch();
         if(c == 'q')
             break;

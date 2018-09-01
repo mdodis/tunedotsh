@@ -39,6 +39,10 @@ namespace mk
             }
         void Update (bool sel);
         void Print  (int row, int col);
+
+        inline void SetW(uint w) {this->w = w;}
+        inline void SetY(uint v) {this->y = v;}
+        inline void SetX(uint v) {this->x = v;}
     private: 
         size_t startOffset = 0;
     };

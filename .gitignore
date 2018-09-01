@@ -2,3 +2,5 @@ build*
 release*
 .vscode
 *.sublime-*
+.yc*
+tags
