@@ -5,10 +5,10 @@
 
 
 namespace mk{
-//    #ifdef WIN32
-//        #define KEY_SF KEY_SDOWN
-//        #define KEY_SR KEY_SUP
-//    #endif
+   #ifdef WIN32
+       #define KEY_SF KEY_SDOWN
+       #define KEY_SR KEY_SUP
+   #endif
 
 
     #define CTRL_KEYPRESS(k) ((k)  & 0x1f)
@@ -393,10 +393,10 @@ namespace mk{
             if(i == selectedItem && isFocus)
                 attron(A_STANDOUT);
             else if(i == currentItem)
-                attron(A_UNDERLINE);
+                attron(COLOR_PAIR(2));
             elements[i]->Print(row, col);
             attroff(A_STANDOUT);
-            attroff(A_UNDERLINE);
+            attroff(COLOR_PAIR(2));
             count++;
         }
     }

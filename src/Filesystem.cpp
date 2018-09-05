@@ -2,7 +2,11 @@
 
 namespace mk
 {
-
+#ifdef WIN32
+    #define DIR_SEP '\\'
+#else
+    #define DIR_SEP '/'
+#endif
     namespace PlaylistMgr{
 
         bool FindInStr(std::string s, std::string expr)
@@ -95,8 +99,8 @@ namespace mk
                         // Should check for permissions
                         std::string path(dirPath);
                         const char* str = path.c_str();
-                        if (str[path.length() - 1] != '/')
-                            path += '/';
+                        if (str[path.length() - 1] != DIR_SEP)
+                            path += DIR_SEP;
                         path += fileName;
                         // playlist.files.push_back(path);
                         SongInfo* s = new SongInfo;
@@ -122,8 +126,8 @@ namespace mk
                     // std::cout << "DIR\n";
                     std::string path(dirPath);
                     const char* str = path.c_str();
-                    if (str[path.length() - 1] != '/')
-                        path += '/';
+                    if (str[path.length() - 1] != DIR_SEP)
+                        path += DIR_SEP;
                     path += drnt->d_name;
                     // std::cout << path << '\n';
                     AddDir(path.c_str(), playlist, recurse);
@@ -153,8 +157,8 @@ namespace mk
                     {
                         std::string path(dirPath);
                         const char* str = path.c_str();
-                        if (str[path.length() - 1] != '/')
-                            path += '/';
+                        if (str[path.length() - 1] != DIR_SEP)
+                            path += DIR_SEP;
                         path += fileName;
 
                         SongInfo* s = new SongInfo;
@@ -162,22 +166,7 @@ namespace mk
                         s->fileName = fileName;
                         playlist.songs.push_back(s);
                     }
-                    // size_t pos;
-                    // pos = fileName.find(".mp3", 0);
-                    // if(pos <= fileName.size() -1 )
-                    // {
-                    //     // Found mp3
 
-                    //     // Should check for permissions
-                    //     std::string path(dirPath);
-                    //     path += '/';
-                    //     path += fileName;
-
-                    //     SongInfo* s = new SongInfo;
-                    //     s->filePath = path;
-                    //     s->fileName = fileName;
-                    //     playlist.songs.push_back(s);
-                    // }
                 }
                 else if(drnt->d_type == DT_DIR && recurse)
                 {
@@ -193,8 +182,8 @@ namespace mk
                     }
                     std::string path(dirPath);
                     const char* str = path.c_str();
-                    if (str[path.length() - 1] != '/')
-                        path += '/';
+                    if (str[path.length() - 1] != DIR_SEP)
+                        path += DIR_SEP;
                     path += drnt->d_name;
                     std::cout << path << '\n';
                     AddDir(path.c_str(), playlist, recurse);
@@ -208,7 +197,8 @@ namespace mk
         {
             std::string file(filePath);
             std::string path;
-            size_t pos = file.rfind('/');
+            size_t pos = file.rfind(DIR_SEP);
+
             path = file.substr(0, pos + 1);
             if (!PlaylistMgr::LoadPlaylistFromDir(path.c_str(), playlist, recurse))
             {
