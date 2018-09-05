@@ -204,6 +204,28 @@ namespace mk
         }
 
 
+        bool LoadPlaylistDirFromFile(const char* filePath, Playlist& playlist, bool recurse)
+        {
+            std::string file(filePath);
+            std::string path;
+            size_t pos = file.rfind('/');
+            path = file.substr(0, pos + 1);
+            if (!PlaylistMgr::LoadPlaylistFromDir(path.c_str(), playlist, recurse))
+            {
+                std::cout << "ERR\n";
+                return false;
+            }
+            for (size_t i = 0; i < playlist.songs.size(); i++)
+            {
+                if (playlist.songs[i]->filePath == file && i != 0)
+                {
+                    std::swap(playlist.songs[0], playlist.songs[i]);
+                }
+            }
+            // playlist.SetPlaylist(&p);
+            return true;
+        }
     }
+
 
 };

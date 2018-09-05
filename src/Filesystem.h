@@ -10,6 +10,12 @@
 
 namespace mk
 {
+    // TODO Keymap
+ 
+
+    // TODO CONFIG
+
+
     namespace PlaylistMgr
     {
         // Loads Playlist JSON file into the json structure
@@ -24,5 +30,6 @@ namespace mk
         // Coneverts only VALID JSON playlist file into a Playlist Class
         bool ToPlaylist             (const json& jFile, Playlist& playlist);
 
+        bool LoadPlaylistDirFromFile(const char* filePath, Playlist& playlist, bool recurse = false);
     }
 };

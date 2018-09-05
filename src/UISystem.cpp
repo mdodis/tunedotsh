@@ -5,10 +5,10 @@
 
 
 namespace mk{
-    #ifdef WIN32
-        #define KEY_SF KEY_SDOWN
-        #define KEY_SR KEY_SUP
-    #endif
+//    #ifdef WIN32
+//        #define KEY_SF KEY_SDOWN
+//        #define KEY_SR KEY_SUP
+//    #endif
 
 
     #define CTRL_KEYPRESS(k) ((k)  & 0x1f)

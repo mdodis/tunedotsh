@@ -1,15 +1,15 @@
 /*
  *  TODO
  *  ====
- *  -- Add Header Option In UIGenericList 
- *  -> Create FileSystem.h + .cpp files to move file management stuff there
+ *  -- Add time elapsed / song length  
+ *  -- Add Reorder toggle rather than hold
  *  -- In FileSystem.h or w/e add support for config files
  *  -- Create platform abstraction funcs( either compile with or separately as lib)
  */
 
 
 // #define PLAYLIST_TEST
-#define GUI_TEST
+// #define GUI_TEST
 // #define FMOD_TEST
 
 #define MS_TO_MIN 1.6667E-5
@@ -152,7 +152,7 @@ MKArgs ParseArgs(int argc, char const * argv[])
         }
 
     }
-    else  if ((pos = a.FindShortOption("dr")))
+    else if ((pos = a.FindShortOption("dr")))
     {
         if (pos + 1 < argc) 
         {
@@ -185,7 +185,7 @@ int main(int argc, char const *argv[])
     sSystem.LoadTrack("music2.ogg");
     FMOD::Sound* s = sSystem.GetSound();
 
-
+    
     SongDetails* dt = SongDetails::From_ID3V1(s);
     // s->getName(name, 128);
 
@@ -305,6 +305,7 @@ int main(int argc, char const *argv[])
     tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
     tracklist.AddItem("Furrytale - Alexander Rybak And Some Idiotic Swedish Dudes");
     tracklist.SetFocus(true);
+
     UIReorderList playlist(0, 0, 30, 10);
     // playlist.Add("YOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYO");
     playlist.AddItem("Song 2");
@@ -335,7 +336,7 @@ int main(int argc, char const *argv[])
     refresh();
     // int barSize = 20;
     // float volume = 1.0f;
-  
+ 
     for(;;)
     {
         int c;
@@ -450,7 +451,25 @@ int main(int argc, char const *argv[])
 
         case MKOption::SinglePlay:
         {
-            
+            /* std::string file(a.path);
+            std::string path;
+            size_t pos = file.rfind('/');
+            path = file.substr(0, pos + 1);
+            if (!PlaylistMgr::LoadPlaylistFromDir(path.c_str(), p))
+            {
+                std::cout << "ERR\n";
+                return -1;
+            }
+            for (size_t i = 0; i < p.songs.size(); i++)
+            {
+                if (p.songs[i]->filePath == file && i != 0)
+                {
+                    std::swap(p.songs[0], p.songs[i]);
+                }
+            } */
+            if (!PlaylistMgr::LoadPlaylistDirFromFile(a.path.c_str(), p, false))
+                return -1;
+            playlist.SetPlaylist(&p);
         } break;
 
         default:
@@ -530,6 +549,10 @@ int main(int argc, char const *argv[])
         else if (c == '>')
         {
             system.AddSoundTime(5.0 / 60.0);
+        }
+        else if (c == '<')
+        {
+            system.AddSoundTime(-(5.0 / 60.0));
         }
         bool b = playlist.Update(c, row, col);
         tracklist.Update(c, row, col);

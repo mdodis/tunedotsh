@@ -137,20 +137,22 @@ namespace mk{
 
         void SetSoundTime (unsigned int time)
         {
-            // double length = GetSoundLength();
-            // if ((double)time * MS_TO_MIN > length ) return;
+            double length = GetSoundLength();
             FMOD_RESULT res = channel->setPosition(time , FMOD_TIMEUNIT_MS);
             if (res != FMOD_OK)
                 throw std::runtime_error(FMOD_ErrorString(res));
         }
         void AddSoundTime (double time)
         {
+            unsigned int cTime = (unsigned int)(time / MS_TO_MIN) + (unsigned int )(GetSoundTime() / MS_TO_MIN);
+            if (time + GetSoundTime() < 0) cTime  = 0;
+
             try {
-                SetSoundTime((unsigned int)(time / MS_TO_MIN) + (unsigned int )(GetSoundTime() / MS_TO_MIN));
+                SetSoundTime(cTime);
             } catch (std::runtime_error& e)
             {
                 // TODO: LOG
-
+                        
                 return;
             }
         }

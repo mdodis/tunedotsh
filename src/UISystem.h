@@ -195,8 +195,8 @@ namespace mk
         static void Print   (unsigned int row, unsigned int col);
         static void Update  (int ch, unsigned long elapsedTime);
 
-        static float GetVolume() {return currentVolume;}
-        static void SetVolume(float value) {
+        static float    GetVolume() {return currentVolume;}
+        static void     SetVolume(float value) {
             if(value < 0.0f)
                 currentVolume = 0.f;
             if(value > 1.0f)
